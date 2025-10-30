@@ -174,7 +174,7 @@ pub fn register_hook(
     if result {
         Ok(())
     } else {
-        Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to register hook"))
+        Err(std::io::Error::other("Failed to register hook"))
     }
 }
 
@@ -246,7 +246,7 @@ pub fn register_hook_with_offset(
     if result {
         Ok(())
     } else {
-        Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to register hook with offset"))
+        Err(std::io::Error::other("Failed to register hook with offset"))
     }
 }
 
@@ -269,7 +269,7 @@ pub fn commit_hook() -> std::io::Result<()> {
     } {
         Ok(())
     } else {
-        Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to commit hook"))
+        Err(std::io::Error::other("Failed to commit hook"))
     }
 }
 
@@ -295,6 +295,6 @@ pub fn invalidate_backup() -> std::io::Result<()> {
     } {
         Ok(())
     } else {
-        Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to invalidate backup"))
+        Err(std::io::Error::other("Failed to invalidate backup"))
     }
 }

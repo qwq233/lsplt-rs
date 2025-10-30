@@ -51,7 +51,7 @@ fn main() {
     let src = std::fs::read_dir(format!("{}/LSPlt/lsplt/src/main/jni/", dep_dir));
     if src.is_err() {
         Command::new("git")
-            .args(&["submodule", "update", "--init", "--recursive"])
+            .args(["submodule", "update", "--init", "--recursive"])
             .status()
             .expect("Failed to init submodule");
     }
@@ -89,9 +89,9 @@ fn main() {
         .expect("Failed to write CMakeLists.txt");
 
     Command::new("cmake")
-        .args(&[
+        .args([
             "-S",
-            &src.as_str(),
+            src.as_str(),
             "-B",
             &format!("{}/build/{}", out, abi),
             "-DCMAKE_BUILD_TYPE=Release",
@@ -112,7 +112,7 @@ fn main() {
         .expect("Failed to run cmake");
 
     Command::new("cmake")
-        .args(&[
+        .args([
             "--build",
             &format!("{}/build/{}", out, abi),
             "--target",
