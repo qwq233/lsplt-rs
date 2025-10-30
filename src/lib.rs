@@ -119,7 +119,7 @@ pub fn register_hook(
     }
 }
 
-pub fn register_hook_with_offest(
+pub fn register_hook_with_offset(
     dev: u64,
     inode: u64,
     offset: usize,
