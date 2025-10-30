@@ -344,7 +344,7 @@ dependencies = [
 
 [[package]]
 name = "lsplt-rs"
-version = "2.1.1"
+version = "2.1.2"
 dependencies = [
  "anyhow",
  "libc",
@@ -354,7 +354,7 @@ dependencies = [
 
 [[package]]
 name = "lsplt-sys"
-version = "2.1.1"
+version = "2.1.2"
 dependencies = [
  "bindgen",
 ]

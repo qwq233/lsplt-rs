@@ -1,6 +1,6 @@
 [package]
 name = "lsplt-sys"
-version = "2.1.1"
+version = "2.1.2"
 edition = "2021"
 license = "LGPL-3.0-only"
 authors = ["qwq233 <rust@qwq2333.top>"]

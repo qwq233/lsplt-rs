@@ -1,6 +1,6 @@
 [package]
 name = "lsplt-rs"
-version = "2.1.1"
+version = "2.1.2"
 edition = "2021"
 license = "LGPL-3.0-only"
 authors = ["qwq233 <rust@qwq2333.top>"]
@@ -10,7 +10,7 @@ repository = "https://github.com/qwq233/lsplt-rs"
 keywords = ["hook", "plt", "lsplt", "plthook"]
 
 [dependencies]
-lsplt-sys = { path = "lsplt-sys", version = "2.1.1" }
+lsplt-sys = { path = "lsplt-sys", version = "^2.1.0" }
 libc = "0.2"
 anyhow = "1.0.100"
 log = "0.4.28"
