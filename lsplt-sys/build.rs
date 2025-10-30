@@ -21,8 +21,33 @@ fn main() {
     println!("Building for target arch: {}", target_arch);
 
     let dep_dir = env!("CARGO_MANIFEST_DIR");
-    let ndk = env::var("ANDROID_NDK").expect("ANDROID_NDK environment variable not set");
+    let ndk = env::var("ANDROID_NDK");
     let out = env::var("OUT_DIR").unwrap();
+
+    
+    let bindings = bindgen::Builder::default()
+        .header("wrapper.hpp")
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+        // Allowlist only the lsplt symbols
+        .allowlist_type("lsplt.*")
+        .allowlist_function("lsplt.*")
+        .allowlist_var("lsplt.*")
+        .opaque_type("std::.*")
+        .clang_arg("-D__ANDROID_API__=21")
+        .clang_arg("-std=c++20")
+        .generate()
+        .expect("Unable to generate bindings");
+
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    bindings
+        .write_to_file(out_path.join("bindings.rs"))
+        .expect("Couldn't write bindings!");
+
+    if env::var("DOCS_RS").is_ok() {
+        return;
+    }
+
+    let ndk = ndk.expect("ANDROID_NDK environment variable not set");
 
     let src = std::fs::read_dir(format!("{}/LSPlt/lsplt/src/main/jni/", dep_dir));
     if src.is_err() {
@@ -103,24 +128,6 @@ fn main() {
     );
     println!("cargo:rustc-link-lib=lsplt_static");
     println!("cargo:rustc-link-lib=c++_shared");
-
-    let bindings = bindgen::Builder::default()
-        .header("wrapper.hpp")
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-        // Allowlist only the lsplt symbols
-        .allowlist_type("lsplt.*")
-        .allowlist_function("lsplt.*")
-        .allowlist_var("lsplt.*")
-        .opaque_type("std::.*")
-        .clang_arg("-D__ANDROID_API__=21")
-        .clang_arg("-std=c++20")
-        .generate()
-        .expect("Unable to generate bindings");
-
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    bindings
-        .write_to_file(out_path.join("bindings.rs"))
-        .expect("Couldn't write bindings!");
 }
 
 #[cfg(docsrs)]
