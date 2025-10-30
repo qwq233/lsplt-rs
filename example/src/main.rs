@@ -3,6 +3,7 @@ use lsplt_rs::MapInfo;
 
 #[no_mangle]
 extern "C" fn get_pid() -> i32 {
+    debug!("get_pid called");
     2333
 }
 
@@ -11,41 +12,52 @@ fn main() {
     info!("Logger initialized");
 
     let map_info = MapInfo::scan("self");
+    let prog_name = std::env::current_exe()
+        .unwrap()
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string();
 
     info!("Current PID: {}", unsafe { libc::getpid() });
 
-    let libc = &map_info
+    let self_info = &map_info
         .iter()
         .find(|mi| {
             if let Some(path) = &mi.pathname {
-                if mi.perms & (libc::PROT_EXEC as u8) == 0 && path.ends_with("libc.so")  {
+                if mi.perms & (libc::PROT_EXEC as u8) == 0 && path.ends_with(&prog_name) {
                     return true;
                 }
             }
             false
         })
         .expect("libc not found in memory maps");
-    info!("libc info: {:?}", libc);
+    info!("libc info: {:?}", self_info);
 
     let mut original_ptr: *mut std::ffi::c_void = std::ptr::null_mut();
 
-    // Cast any function signature to a raw pointer for registration
     lsplt_rs::register_hook(
-        libc.dev,
-        libc.inode,
+        self_info.dev,
+        self_info.inode,
         "getpid",
         get_pid as *mut std::ffi::c_void,
         Some(&mut original_ptr),
-    ).unwrap();
+    )
+    .unwrap();
 
+    debug!("commit hook");
     lsplt_rs::commit_hook().unwrap();
-
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    debug!("hook committed");
 
     info!("Current PID: {}", unsafe { libc::getpid() });
     info!("Original PID: {}", unsafe {
-        let original_fn: extern "C" fn() -> i32 = std::mem::transmute(original_ptr);
-        original_fn()
+        if original_ptr.is_null() {
+            panic!("Original function pointer is null\nWhich means the hook registration failed.");
+        } else {
+            let original_fn: extern "C" fn() -> i32 = std::mem::transmute(original_ptr);
+            original_fn()
+        }
     });
 }
 
