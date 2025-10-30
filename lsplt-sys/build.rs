@@ -3,6 +3,7 @@ use std::io::BufRead;
 use std::path::PathBuf;
 use std::process::Command;
 
+#[cfg(not(docsrs))]
 fn main() {
     println!("cargo:rerun-if-changed=wrapper.hpp");
     println!("cargo:rerun-if-changed=wrapper.cc");
@@ -112,6 +113,30 @@ fn main() {
         .allowlist_var("lsplt.*")
         .opaque_type("std::.*")
         .clang_arg("-D__ANDROID_API__=21")
+        .clang_arg("-std=c++20")
+        .generate()
+        .expect("Unable to generate bindings");
+
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    bindings
+        .write_to_file(out_path.join("bindings.rs"))
+        .expect("Couldn't write bindings!");
+}
+
+#[cfg(docsrs)]
+fn main() {
+    println!("cargo:rerun-if-changed=wrapper.hpp");
+    println!("cargo:rerun-if-changed=wrapper.cc");
+    println!("cargo:rerun-if-changed=build.rs");
+
+    let bindings = bindgen::Builder::default()
+        .header("wrapper.hpp")
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+        // Allowlist only the lsplt symbols
+        .allowlist_type("lsplt.*")
+        .allowlist_function("lsplt.*")
+        .allowlist_var("lsplt.*")
+        .opaque_type("std::.*")
         .clang_arg("-std=c++20")
         .generate()
         .expect("Unable to generate bindings");
