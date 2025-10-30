@@ -3,14 +3,13 @@ use std::io::BufRead;
 use std::path::PathBuf;
 use std::process::Command;
 
-#[cfg(not(docsrs))]
 fn main() {
     println!("cargo:rerun-if-changed=wrapper.hpp");
     println!("cargo:rerun-if-changed=wrapper.cc");
     println!("cargo:rerun-if-changed=build.rs");
 
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
-    let target_arch = match target_arch.as_str() {
+    let abi = match target_arch.as_str() {
         "x86" => "x86",
         "x86_64" => "x86_64",
         "aarch64" => "arm64-v8a",
@@ -18,7 +17,7 @@ fn main() {
         other => panic!("Unsupported target arch: {}", other),
     };
 
-    println!("Building for target arch: {}", target_arch);
+    println!("Building for target arch: {}", abi);
 
     let dep_dir = env!("CARGO_MANIFEST_DIR");
     let ndk = env::var("ANDROID_NDK");
@@ -58,7 +57,7 @@ fn main() {
     }
 
     // clean old build dir
-    let _ = std::fs::remove_dir_all(format!("{}/build/{}", out, target_arch));
+    let _ = std::fs::remove_dir_all(format!("{}/build/{}", out, abi));
 
     std::fs::create_dir_all(format!("{}/build/src", out))
         .expect("Failed to create build directory");
@@ -94,7 +93,7 @@ fn main() {
             "-S",
             &src.as_str(),
             "-B",
-            &format!("{}/build/{}", out, target_arch),
+            &format!("{}/build/{}", out, abi),
             "-DCMAKE_BUILD_TYPE=Release",
             "-DCMAKE_POLICY_VERSION_MINIMUM=3.5",
             &format!(
@@ -105,7 +104,7 @@ fn main() {
                 "-DCMAKE_TOOLCHAIN_FILE={}/build/cmake/android.toolchain.cmake",
                 ndk
             ),
-            &format!("-DANDROID_ABI={}", target_arch),
+            &format!("-DANDROID_ABI={}", abi),
             "-DANDROID_PLATFORM=android-21",
             "-DANDROID_STL=c++_shared",
         ])
@@ -115,7 +114,7 @@ fn main() {
     Command::new("cmake")
         .args(&[
             "--build",
-            &format!("{}/build/{}", out, target_arch),
+            &format!("{}/build/{}", out, abi),
             "--target",
             "lsplt_static",
         ])
@@ -124,34 +123,25 @@ fn main() {
 
     println!(
         "cargo:rustc-link-search=native={}/build/{}",
-        out, target_arch
+        out, abi
     );
     println!("cargo:rustc-link-lib=lsplt_static");
     println!("cargo:rustc-link-lib=c++_shared");
-}
 
-#[cfg(docsrs)]
-fn main() {
-    println!("cargo:rerun-if-changed=wrapper.hpp");
-    println!("cargo:rerun-if-changed=wrapper.cc");
-    println!("cargo:rerun-if-changed=build.rs");
-
-    let bindings = bindgen::Builder::default()
-        .header("wrapper.hpp")
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-        // Allowlist only the lsplt symbols
-        .allowlist_type("lsplt.*")
-        .allowlist_function("lsplt.*")
-        .allowlist_var("lsplt.*")
-        .opaque_type("std::.*")
-        .clang_arg("-std=c++20")
-        .generate()
-        .expect("Unable to generate bindings");
-
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    bindings
-        .write_to_file(out_path.join("bindings.rs"))
-        .expect("Couldn't write bindings!");
+    // fix __builtin___clear_cache symbol not found
+    let clang_lib_dir = format!(
+        "toolchains/llvm/prebuilt/linux-x86_64/lib/clang/{}/lib/linux/",
+        std::fs::read_dir(format!("{}/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/", ndk))
+            .expect("Failed to read clang version")
+            .next()
+            .expect("No clang version found")
+            .unwrap()
+            .file_name()
+            .into_string()
+            .unwrap()
+    );
+    println!("cargo:rustc-link-search={ndk}/{clang_lib_dir}");
+    println!("cargo:rustc-link-lib=clang_rt.builtins-{target_arch}-android");
 }
 
 fn copy_dir_all(
