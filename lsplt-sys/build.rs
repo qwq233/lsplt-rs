@@ -34,6 +34,7 @@ fn main() {
         .opaque_type("std::.*")
         .clang_arg("-D__ANDROID_API__=21")
         .clang_arg("-std=c++20")
+        .layout_tests(false)
         .generate()
         .expect("Unable to generate bindings");
 
