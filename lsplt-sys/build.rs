@@ -107,7 +107,7 @@ fn main() {
             ),
             &format!("-DANDROID_ABI={}", abi),
             "-DANDROID_PLATFORM=android-21",
-            "-DANDROID_STL=c++_shared",
+            "-DANDROID_STL=c++_static",
         ])
         .status()
         .expect("Failed to run cmake");
@@ -127,7 +127,8 @@ fn main() {
         out, abi
     );
     println!("cargo:rustc-link-lib=lsplt_static");
-    println!("cargo:rustc-link-lib=c++_shared");
+    println!("cargo:rustc-link-lib=c++_static");
+    println!("cargo:rustc-link-lib=c++abi");
 
     // fix __builtin___clear_cache symbol not found
     let clang_lib_dir = format!(
