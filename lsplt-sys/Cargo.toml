@@ -1,6 +1,6 @@
 [package]
 name = "lsplt-sys"
-version = "2.1.5"
+version = "2.1.6"
 edition = "2021"
 license = "LGPL-3.0-only"
 authors = ["qwq233 <rust@qwq2333.top>"]
@@ -11,5 +11,6 @@ keywords = ["hook", "plt", "lsplt", "plthook"]
 
 [build-dependencies]
 bindgen = "^0.72.1"
+cc = "^1.1"
 
 [dependencies]

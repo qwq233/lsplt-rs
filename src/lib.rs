@@ -3,6 +3,9 @@
 //! This module provides a safe Rust interface to the LSPlt hooking functionality,
 //! allowing for function hooking in shared libraries.
 
+pub type DeviceId = lsplt_sys::dev_t;
+pub type Inode = lsplt_sys::ino_t;
+
 #[derive(Debug, Clone)]
 /// An entry that describes a line in /proc/self/maps. You can obtain a list of these entries
 /// by calling [`scan()`](MapInfo::scan) or [`scan_self()`](MapInfo::scan_self).
@@ -23,9 +26,9 @@ pub struct MapInfo {
     /// The device number of the memory region.
     /// Major can be obtained by `major()`
     /// Minor can be obtained by `minor()`
-    pub dev: u64,
+    pub dev: DeviceId,
     /// The inode number of the memory region.
-    pub inode: u64,
+    pub inode: Inode,
     /// The path of the memory region.
     pub pathname: Option<String>,
 }
@@ -37,8 +40,8 @@ impl MapInfo {
         perms: u8,
         is_private: bool,
         offset: usize,
-        dev: u64,
-        inode: u64,
+        dev: DeviceId,
+        inode: Inode,
         pathname: Option<String>,
     ) -> Self {
         MapInfo {
@@ -151,8 +154,8 @@ impl MapInfo {
 /// - [`commit_hook`]
 /// - [`invalidate_backup`]
 pub fn register_hook(
-    dev: u64,
-    inode: u64,
+    dev: DeviceId,
+    inode: Inode,
     symbol: &str,
     callback: *mut std::ffi::c_void,
     backup: Option<&mut *mut std::ffi::c_void>,
@@ -219,8 +222,8 @@ pub fn register_hook(
 /// - [`commit_hook`]
 /// - [`invalidate_backup`]
 pub fn register_hook_with_offset(
-    dev: u64,
-    inode: u64,
+    dev: DeviceId,
+    inode: Inode,
     offset: usize,
     size: usize,
     symbol: &str,
